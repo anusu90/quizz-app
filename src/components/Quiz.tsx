@@ -27,11 +27,29 @@ const Quiz = () => {
     return shuffle(allOptions);
   }, [correctAnswer, incorrectAnswers]);
 
+  let getNextQuestAfterTimeOut: NodeJS.Timeout | undefined = undefined;
+
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputString = event?.target?.value ?? "";
     gameDispatch({
       type: GameActionTypes.INPUT_ENTER,
       payload: { currentAnswer: inputString },
+    });
+  };
+
+  const getNewQuestion = () => {
+    if (getNextQuestAfterTimeOut) {
+      clearTimeout(getNextQuestAfterTimeOut);
+    }
+    fetchQuestion();
+    gameDispatch({
+      type: GameActionTypes.INPUT_ENTER,
+      payload: {
+        currentAnswer: "",
+        isCurrentAnswered: false,
+        isCurrentCorrect: undefined,
+        currentQuestionCount: currentQuestionCount + 1,
+      },
     });
   };
 
@@ -54,19 +72,10 @@ const Quiz = () => {
       type: GameActionTypes.QUESTION_ANSWERED,
       payload: { isCurrentAnswered: true, isCurrentCorrect: isCorrect },
     });
-  };
 
-  const getNewQuestion = () => {
-    fetchQuestion();
-    gameDispatch({
-      type: GameActionTypes.INPUT_ENTER,
-      payload: {
-        currentAnswer: "",
-        isCurrentAnswered: false,
-        isCurrentCorrect: undefined,
-        currentQuestionCount: currentQuestionCount + 1,
-      },
-    });
+    getNextQuestAfterTimeOut = setTimeout(() => {
+      getNewQuestion();
+    }, 2000);
   };
 
   const renderQuestion = () => {
@@ -122,12 +131,12 @@ const Quiz = () => {
           loading={isLoading}
           disabled={isLoading || isCurrentAnswered}
         />
-        <Button
+        {/* <Button
           buttonText="Next Question"
           onClick={getNewQuestion}
           loading={isLoading}
           disabled={isLoading}
-        />
+        /> */}
       </div>
     </div>
   );
